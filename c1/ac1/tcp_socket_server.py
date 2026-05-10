@@ -74,7 +74,7 @@ def create_HTTP_msg(json_msg: dict) -> str:
     # Toma un diccionario JSON y lo convierte en un mensaje HTTP
     headers_dict = json_msg.get("headers", {}) # obtiene los headers del json
     body = json_msg.get("body", "") # obtiene el body del json
-    headers_dict["Content-Length"] = len(body)
+    headers_dict["Content-Length"] = len(body) # poner .encode(urt-8) por tiles y weas de español
 
     # Construimos el mensaje HTTP
     http_message = ""
