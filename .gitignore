@@ -1,3 +1,5 @@
 c1/**/*.pdf
-c1/**/*.md
+c1/act/informe/*.md
 c1/**/*.zip
+__pycache__/
+c2/ac4/*.md
