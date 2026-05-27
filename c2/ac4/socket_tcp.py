@@ -155,21 +155,10 @@ class SocketTCP:
                     continue 
                 
                 if ack_segmento['ack'] == 1 and ack_segmento['syn'] == 0 and ack_segmento['seq_num'] == self.seq_num_a_enviar:
-                    self.congestion_controler.event_ack_received()
-                    if self.DEBUG_CC:
-                        print(f"[CC Debug] ACK recibido")
-                        print(f"  cwnd: {self.congestion_controler.get_cwnd()} bytes")
-                        print()
                     self.socket_udp.settimeout(None)
                     self.seq_num_a_enviar = 1 - self.seq_num_a_enviar
                     break                 
             except socket.timeout:
-                self.congestion_controler.event_timeout()
-                if self.DEBUG_CC:
-                    print(f"[CC Debug] TIMEOUT")
-                    print(f"  cwnd: {self.congestion_controler.get_cwnd()} bytes")
-                    print(f"  ssthresh: {self.congestion_controler.ssthresh}")
-                    print()
                 continue
 
 
@@ -372,10 +361,7 @@ class SocketTCP:
     def send_using_go_back_n(self, message):
         """Envía un mensaje completo usando Go-Back-N"""
         print(f"[Send GBN] Preparando envío de {len(message)} bytes totales.")
-        
-        # NO reiniciar seq_num_a_enviar: mantener continuidad entre mensajes
-        # para evitar confusión con paquetes retrasados de mensajes anteriores
-        
+    
         # 1. Preparar los datos a enviar
         data_list = []
         largo_msg_bytes = str(len(message)).encode('utf-8')
@@ -388,12 +374,16 @@ class SocketTCP:
         for i in range(0, len(message), mss):
             data_list.append(message[i:i+mss])
             
-        # 2. Inicializar parámetros de GBN usando congestion controller
-        # El tamaño de la ventana es determinado por cwnd del congestion controller
+        # 2. Inicializar parametros de GBN usando congestion controller
         window_size = int(self.congestion_controler.get_MSS_in_cwnd())
+        if window_size < 1:
+            window_size = 1
+        # Evita ambiguedad cuando el espacio de secuencias es pequeno
+        if window_size >= self.num_max_secuencia:
+            window_size = self.num_max_secuencia - 1
         window = SlidingWindowCC(window_size, data_list, self.seq_num_a_enviar)
         
-        # Debug: mostrar estado del congestion controller
+        # Debug: mostrar estado
         if self.DEBUG_CC:
             print(f"[CC Debug]")
             print(f"  MSS: {mss} bytes")
@@ -408,6 +398,7 @@ class SocketTCP:
         base = 0  # indice del primer paquete no confirmado
         next_to_send = 0  # indice del siguiente paquete a enviar
         total_packets = len(data_list)
+        initial_seq = self.seq_num_a_enviar
         
         # 3. Ciclo principal de GBN
         while base < total_packets:
@@ -434,69 +425,33 @@ class SocketTCP:
                     self.socket_udp.sendto(ack_seg, self.direccion_destino)
                     continue
                 
-                # Procesar ACK acumulativo
+                # Procesar ACK acumulativo (ACK indica el siguiente seq esperado)
                 if ack_segmento['ack'] == 1 and ack_segmento['syn'] == 0:
                     ack_seq = ack_segmento['seq_num']
-                    
-                    # Caso borde: el ACK puede estar fuera de la ventana (si se redujo la cwnd)
-                    # Mover ventana repetidamente si el ACK está más allá del máximo actual
-                    while base < total_packets and base + window_size <= ack_seq:
-                        # El ACK está más allá de nuestro máximo, mover toda la ventana
-                        window.move_window(window_size)
-                        base += window_size
-                        # Contar evento_ack_received una vez por cada paquete de la ventana anterior
-                        for _ in range(window_size):
-                            self.congestion_controler.event_ack_received()
-                    
-                    # Ahora procesar el ACK normalmente dentro de la ventana
-                    if base < total_packets and ack_seq >= base:
-                        steps = 0
-                        for i in range(window_size):
-                            if base + i >= total_packets:
-                                break
-                            # El número de secuencia de cada paquete es su índice absoluto
-                            packet_seq = base + i
-                            if ack_seq > packet_seq:
-                                steps += 1
-                            else:
-                                break
-                        
-                        if steps > 0:
-                            # Deslizar ventana
-                            window.move_window(steps)
-                            base += steps
-                            
-                            # Evento ACK recibido en congestion controller
-                            for _ in range(steps):
-                                self.congestion_controler.event_ack_received()
-                    
-                    # Actualizar window_size después de event_ack_received()
-                    old_window_size = window_size
-                    window_size = int(self.congestion_controler.get_MSS_in_cwnd())
-                    
-                    if old_window_size != window_size:
+                    base_seq = (initial_seq + base) % self.num_max_secuencia
+                    ack_delta = (ack_seq - base_seq) % self.num_max_secuencia
+
+                    # ACK duplicado o inválido
+                    if ack_delta == 0 or ack_delta > (next_to_send - base):
+                        continue
+
+                    steps = ack_delta
+                    window.move_window(steps)
+                    base += steps
+
+                    for _ in range(steps):
+                        self.congestion_controler.event_ack_received()
+
+                    # Ajustar ventana según cwnd
+                    new_window_size = int(self.congestion_controler.get_MSS_in_cwnd())
+                    if new_window_size < 1:
+                        new_window_size = 1
+                    if new_window_size >= self.num_max_secuencia:
+                        new_window_size = self.num_max_secuencia - 1
+                    if new_window_size != window_size:
+                        window_size = new_window_size
                         window.update_window_size(window_size)
-                        
-                        # Si la ventana creció, enviar los nuevos elementos consecutivamente
-                        if window_size > old_window_size:
-                            while next_to_send < base + window_size and next_to_send < total_packets:
-                                data = window.get_data(next_to_send - base)
-                                seq = (self.seq_num_a_enviar + next_to_send) % self.num_max_secuencia
-                                segmento = self.create_segment(data, seq, syn=0, ack=0, fin=0)
-                                self.socket_udp.sendto(segmento, self.direccion_destino)
-                                next_to_send += 1
-                    
-                    # Debug: mostrar cambio en el CC y de la ventana
-                    if self.DEBUG_CC:
-                        print(f"[CC Debug] ACK recibido")
-                        print(f"  ack_seq: {ack_seq}")
-                        print(f"  base: {base}, next_to_send: {next_to_send}, total: {total_packets}")
-                        print(f"  cwnd: {self.congestion_controler.get_cwnd()} bytes")
-                        print(f"  window_size: {window_size} MSSs (anterior: {old_window_size})")
-                        print(f"  state: {self.congestion_controler.current_state}")
-                        print(f"  ventana interior: {list(range(base, min(base + window_size, total_packets)))}") 
-                        print()
-                        
+                                     
             except (socket.timeout, TimeoutError):
                 # 3.3 TIMEOUT: Retransmitir TODOS los paquetes desde la base (GBN puro)
                 print(f"\n[GBN] ¡Timeout! Retransmitiendo desde paquete {base}...")
@@ -507,8 +462,11 @@ class SocketTCP:
                 # Actualizar window_size después de event_timeout() (cwnd se reduce)
                 old_window_size = window_size
                 window_size = int(self.congestion_controler.get_MSS_in_cwnd())
-                
-                if old_window_size != window_size:
+                if window_size < 1:
+                    window_size = 1
+                if window_size >= self.num_max_secuencia:
+                    window_size = self.num_max_secuencia - 1
+                if window_size != old_window_size:
                     window.update_window_size(window_size)
                 
                 # Debug: mostrar cambio en el CC y de la ventana
@@ -522,7 +480,7 @@ class SocketTCP:
                     print(f"  ventana interior: {list(range(base, min(base + window_size, total_packets)))}")
                     print()
                 
-                # Resetear el timer para poder reutilizarlo (con verificación defensiva)
+                # Resetear el timer para poder reutilizarlo
                 try:
                     if hasattr(self.socket_udp, 'timer_list') and self.socket_udp.timer_list[0] is not None:
                         self.socket_udp.stop_timer(0)
@@ -547,13 +505,12 @@ class SocketTCP:
             msg_recibido, addr = self.socket_udp.recvfrom(1024)
             segmento = self.parse_segment(msg_recibido)
             # Mitigación del Handshake atrasado
-            if segmento['syn'] == 1 and segmento['ack'] == 1:
-                ack_seg = self.create_segment(b"", segmento['seq_num'], syn=0, ack=1, fin=0)
-                self.socket_udp.sendto(ack_seg, addr)
-                continue
+            #if segmento['syn'] == 1 and segmento['ack'] == 1:
+            #    ack_seg = self.create_segment(b"", segmento['seq_num'], syn=0, ack=1, fin=0)
+            #    self.socket_udp.sendto(ack_seg, addr)
+            #    continue
                 
             if segmento['syn'] == 0 and segmento['ack'] == 0:
-                # Si el paquete llega ESTRICTAMENTE EN ORDEN
                 if segmento['seq_num'] == self.seq_num_esperado:
                     
                     # Incrementar al siguiente número de secuencia (con aritmética modular)
@@ -566,8 +523,8 @@ class SocketTCP:
                     return segmento['data']
 
                 else:
-                    # Si llega fuera de orden (o es duplicado), GBN exige DESCARTARLO 
-                    # y REENVIAR EL ACK del último paquete bien recibido (self.seq_num_esperado).
+                    # Si llega fuera de orden, descartarlo y reenviar 
+                    # el ACK del último paquete recibido (self.seq_num_esperado).
                     ack_seg = self.create_segment(b"", self.seq_num_esperado, syn=0, ack=1, fin=0)
                     self.socket_udp.sendto(ack_seg, addr)
 
@@ -582,9 +539,6 @@ class SocketTCP:
                 self.buffer_recepcion = self.buffer_recepcion[buff_size:]
                 return datos_retorno
             else:
-                # No hay datos pendientes - intentar recibir un nuevo mensaje
-                # NO reiniciar seq_num_esperado: mantener continuidad entre mensajes
-                # para evitar confusión con paquetes retrasados de mensajes anteriores
                 data_largo = self._recv_gbn()
                 self.bytes_esperados = int(data_largo.decode('utf-8'))
                 print(f"[Recv GBN] Se espera recibir un mensaje de {self.bytes_esperados} bytes.")
