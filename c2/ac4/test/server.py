@@ -1,15 +1,10 @@
-"""
-Test de Go-Back-N sin pérdidas
-Verifica que send/recv con mode="go_back_n" funciona correctamente
-"""
-
 import sys
 import os
 import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from socket_tcp import SocketTCP
 
-IP = '192.168.85.71'
+IP = '192.168.1.109'
 PUERTO = 8000
 address = (IP, PUERTO)
 switch_mode = 1

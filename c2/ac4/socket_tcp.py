@@ -22,6 +22,7 @@ class SocketTCP:
         self.buffer_recepcion = b""
         self.num_max_secuencia = 256
         self.congestion_controler = cc.CongestionControl(8)
+        self.number_of_sent_segments = 0
 
 
     @staticmethod
@@ -79,7 +80,7 @@ class SocketTCP:
         while True:
             self.socket_udp.sendto(segmento_syn, self.direccion_destino)
             try:
-                msg_recibido, nueva_direccion_servidor = self.socket_udp.recvfrom(1024)
+                msg_recibido, nueva_direccion_servidor = self.socket_udp.recvfrom(4056)
                 segmento_recibido = self.parse_segment(msg_recibido)
                 
                 if segmento_recibido['syn'] == 1 and segmento_recibido['ack'] == 1:
@@ -104,7 +105,7 @@ class SocketTCP:
         self.socket_udp.settimeout(None) 
         
         while True:
-            msg_recibido, direccion_cliente = self.socket_udp.recvfrom(1024)
+            msg_recibido, direccion_cliente = self.socket_udp.recvfrom(4056)
             segmento_recibido = self.parse_segment(msg_recibido)
             
             if segmento_recibido['syn'] == 1:
@@ -122,7 +123,7 @@ class SocketTCP:
                 while True:
                     nuevo_socket.socket_udp.sendto(segmento_syn_ack, direccion_cliente)
                     try:
-                        msg_ack, _ = nuevo_socket.socket_udp.recvfrom(1024)
+                        msg_ack, _ = nuevo_socket.socket_udp.recvfrom(4056)
                         segmento_ack = nuevo_socket.parse_segment(msg_ack)
                         
                         if segmento_ack['ack'] == 1 and segmento_ack['syn'] == 0:
@@ -144,7 +145,7 @@ class SocketTCP:
         while True:
             self.socket_udp.sendto(segmento, self.direccion_destino)
             try:
-                msg_ack, _ = self.socket_udp.recvfrom(1024)
+                msg_ack, _ = self.socket_udp.recvfrom(4056)
                 ack_segmento = self.parse_segment(msg_ack)
 
                 # Si recibimos un SYN-ACK mientras enviamos datos, el Servidor está atascado.
@@ -174,7 +175,7 @@ class SocketTCP:
         self.socket_udp.settimeout(None)
         
         while True:
-            msg_recibido, addr = self.socket_udp.recvfrom(1024)
+            msg_recibido, addr = self.socket_udp.recvfrom(4056)
             segmento = self.parse_segment(msg_recibido)
             
             if segmento['syn'] == 1 and segmento['ack'] == 1:
@@ -220,7 +221,7 @@ class SocketTCP:
     
         while intentos < 3 and (not ack_recibido or not fin_recibido):
             try:
-                msg_recibido, addr = self.socket_udp.recvfrom(1024)
+                msg_recibido, addr = self.socket_udp.recvfrom(4056)
                 segmento = self.parse_segment(msg_recibido)
                 direccion_b = addr
                 
@@ -277,7 +278,7 @@ class SocketTCP:
         
         # Esperar el paquete FIN inicial del Host A
         while True:
-            msg_recibido, addr = self.socket_udp.recvfrom(1024)
+            msg_recibido, addr = self.socket_udp.recvfrom(4056)
             segmento_fin_a = self.parse_segment(msg_recibido)
             
             if segmento_fin_a['fin'] == 1:
@@ -301,7 +302,7 @@ class SocketTCP:
         
         while intentos < 3:
             try:
-                msg_recibido, _ = self.socket_udp.recvfrom(1024)
+                msg_recibido, _ = self.socket_udp.recvfrom(4056)
                 ack_final = self.parse_segment(msg_recibido)
                 
                 if ack_final['ack'] == 1:
@@ -360,6 +361,7 @@ class SocketTCP:
     def send_using_go_back_n(self, message):
         """Envía un mensaje completo usando Go-Back-N"""
         print(f"[Send GBN] Preparando envío de {len(message)} bytes totales.")
+        self.number_of_sent_segments = 0
     
         # 1. Preparar los datos a enviar
         data_list = []
@@ -406,11 +408,12 @@ class SocketTCP:
                 
                 # Enviar con un timer (reiniciado cada envío)
                 self.socket_udp.sendto(segmento, self.direccion_destino)
+                self.number_of_sent_segments += 1
                 next_to_send += 1
             
             try:
                 # 3.2 ESPERAR ACK
-                msg_ack, _ = self.socket_udp.recvfrom(1024)
+                msg_ack, _ = self.socket_udp.recvfrom(4056)
                 ack_segmento = self.parse_segment(msg_ack)
                 
                 # Mitigar Handshake retrasado
@@ -496,7 +499,7 @@ class SocketTCP:
         self.socket_udp.settimeout(None)
         
         while True:
-            msg_recibido, addr = self.socket_udp.recvfrom(1024)
+            msg_recibido, addr = self.socket_udp.recvfrom(4056)
             segmento = self.parse_segment(msg_recibido)
                 
             if segmento['syn'] == 0 and segmento['ack'] == 0:
