@@ -15,7 +15,7 @@ class SocketTCP:
         self.direccion_destino = None
         self.seq_num_esperado = 0
         self.seq_num_a_enviar = 0
-        self.TIMEOUT = 10.0
+        self.TIMEOUT = 1.0
         self.MAX_PAYLOAD = 16
         self.conectado = False
         self.bytes_esperados = 0
@@ -211,8 +211,7 @@ class SocketTCP:
         print("\n[Close - Host A] Iniciando cierre de conexión...")
         segmento_fin = self.create_segment(b"", self.seq_num_a_enviar, syn=0, ack=0, fin=1)
         self.socket_udp.settimeout(self.TIMEOUT)      
-        ack_recibido = False
-        fin_recibido = False
+        ack_recibido, fin_recibido = False
         intentos = 0
         direccion_b = self.direccion_destino
         ultimo_seq_b = 0
@@ -369,20 +368,14 @@ class SocketTCP:
         
         # Obtener MSS
         mss = self.congestion_controler.MSS
-        
-        # Dividir el mensaje en trozos de tamaño MSS
         for i in range(0, len(message), mss):
             data_list.append(message[i:i+mss])
             
         # 2. Inicializar parametros de GBN usando congestion controller
-        window_size = int(self.congestion_controler.get_MSS_in_cwnd())
-        if window_size < 1:
-            window_size = 1
-        # Evita ambiguedad cuando el espacio de secuencias es pequeno
-        if window_size >= self.num_max_secuencia:
-            window_size = self.num_max_secuencia - 1
+        raw_ws = int(self.congestion_controler.get_MSS_in_cwnd())
+        window_size = max(1, min(raw_ws, self.num_max_secuencia - 1))
         window = SlidingWindowCC(window_size, data_list, self.seq_num_a_enviar)
-        
+
         # Debug: mostrar estado
         if self.DEBUG_CC:
             print(f"[CC Debug]")
@@ -399,14 +392,15 @@ class SocketTCP:
         next_to_send = 0  # indice del siguiente paquete a enviar
         total_packets = len(data_list)
         initial_seq = self.seq_num_a_enviar
-        
+        dup_ack_count = 0
+        last_ack_seq = None
+
         # 3. Ciclo principal de GBN
         while base < total_packets:
             
             # 3.1 ENVIAR paquetes hasta llenar la ventana
             while next_to_send < base + window_size and next_to_send < total_packets:
                 data = window.get_data(next_to_send - base)
-                # Usar números de secuencia globales (continuo entre mensajes)
                 seq = (self.seq_num_a_enviar + next_to_send) % self.num_max_secuencia
                 segmento = self.create_segment(data, seq, syn=0, ack=0, fin=0)
                 
@@ -504,11 +498,6 @@ class SocketTCP:
         while True:
             msg_recibido, addr = self.socket_udp.recvfrom(1024)
             segmento = self.parse_segment(msg_recibido)
-            # Mitigación del Handshake atrasado
-            #if segmento['syn'] == 1 and segmento['ack'] == 1:
-            #    ack_seg = self.create_segment(b"", segmento['seq_num'], syn=0, ack=1, fin=0)
-            #    self.socket_udp.sendto(ack_seg, addr)
-            #    continue
                 
             if segmento['syn'] == 0 and segmento['ack'] == 0:
                 if segmento['seq_num'] == self.seq_num_esperado:

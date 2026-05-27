@@ -105,8 +105,6 @@ Conectado a 192.168.1.109:8000
 CLIENTE FINALIZADO
 
 
-
-
 ## server
 python3 server.py 
 SERVIDOR - Go-Back-N
@@ -146,12 +144,8 @@ SERVIDOR FINALIZADO
 
 
 # Test sin perdidas con cc (debug)
+## cliente
 python3 cliente.py 
-CLIENTE - Go-Back-N
-Conectado a 192.168.1.109:8000
-
-[Test 1] Enviando mensaje de 16 bytes...
-  Mensaje: b'Mensje de len=16'
 [Send GBN] Preparando envío de 16 bytes totales.
 [CC Debug]
   MSS: 8 bytes
@@ -160,25 +154,6 @@ Conectado a 192.168.1.109:8000
   state: slow start
   ssthresh: None
 
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 16 bytes
-  window_size: 2 MSSs
-  state: slow start
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 24 bytes
-  window_size: 3 MSSs
-  state: slow start
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 32 bytes
-  window_size: 4 MSSs
-  state: slow start
-
-  ✓ Enviado
-
-[Test 2] Enviando mensaje de 19 bytes...
-  Mensaje: b'Mensaje de largo 19'
 [Send GBN] Preparando envío de 19 bytes totales.
 [CC Debug]
   MSS: 8 bytes
@@ -187,30 +162,6 @@ Conectado a 192.168.1.109:8000
   state: slow start
   ssthresh: None
 
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 40 bytes
-  window_size: 5 MSSs
-  state: slow start
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 48 bytes
-  window_size: 6 MSSs
-  state: slow start
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 56 bytes
-  window_size: 7 MSSs
-  state: slow start
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 64 bytes
-  window_size: 8 MSSs
-  state: slow start
-
-  ✓ Enviado
-
-[Test 3] Enviando mensaje de 19 bytes...
-  Mensaje: b'Mensaje de largo 19'
 [Send GBN] Preparando envío de 19 bytes totales.
 [CC Debug]
   MSS: 8 bytes
@@ -219,53 +170,43 @@ Conectado a 192.168.1.109:8000
   state: slow start
   ssthresh: None
 
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 72 bytes
-  window_size: 9 MSSs
-  state: slow start
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 80 bytes
-  window_size: 10 MSSs
-  state: slow start
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 88 bytes
-  window_size: 11 MSSs
-  state: slow start
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
+[Send GBN] Preparando envío de 256 bytes totales.
+[CC Debug]
+  MSS: 8 bytes
   cwnd: 96 bytes
   window_size: 12 MSSs
   state: slow start
+  ssthresh: None
 
-  ✓ Enviado
+  
+## server:
+ python3 server.py 
+[SocketTCP] Escuchando (bind) en ('192.168.1.109', 8000)
+[SocketTCP] Escuchando (bind) en ('192.168.1.109', 0)
+[Recv GBN] Se espera recibir un mensaje de 16 bytes.
+Test 1 received: b'Mensje de len=16'
+Test 1: Passed
 
-[Cierre] Cerrando conexión...
+[Recv GBN] Se espera recibir un mensaje de 19 bytes.
+Test 2 received: b'Mensaje de largo 19'
+Test 2: Passed
 
-[Close - Host A] Iniciando cierre de conexión...
-[Close - Host A] ACK recibido de Host B.
-[Close - Host A] FIN recibido de Host B.
-[Close - Host A] ¡Respuestas recibidas con éxito! Mitigando pérdidas del último ACK...
-[Close - Host A] ACK final enviado (1/3). Esperando un timeout...
-[Close - Host A] ACK final enviado (2/3). Esperando un timeout...
-[Close - Host A] ACK final enviado (3/3). Esperando un timeout...
-[Close - Host A] ¡Conexión y recursos liberados exitosamente!
-CLIENTE FINALIZADO
+[Recv GBN] Se espera recibir un mensaje de 19 bytes.
+Test 3 received: b'Mensaje de largo 19'
+Test 3: Passed
 
-
-
+Test 4: Edge case - delaying ACKs...
+[Recv GBN] Se espera recibir un mensaje de 256 bytes.
+Test 4 received bytes: 256
+Test 4: Passed
 
 
 
-# Test con perdidas con cc (debug)
-( sudo tc qdisc add dev lo root netem loss 20 delay 3)
+# Test con perdidas(20%) con cc (debug)
+(sudo tc qdisc add dev lo root netem loss 20 delay 1)
+
+## cliente
 python3 cliente.py 
-CLIENTE - Go-Back-N
-Conectado a 192.168.1.109:8000
-
-[Test 1] Enviando mensaje de 16 bytes...
-  Mensaje: b'Mensje de len=16'
 [Send GBN] Preparando envío de 16 bytes totales.
 [CC Debug]
   MSS: 8 bytes
@@ -275,118 +216,247 @@ Conectado a 192.168.1.109:8000
   ssthresh: None
 
 
-[GBN] ¡Timeout! Retransmitiendo desde paquete 0...
+[GBN] ¡Timeout! Retransmitiendo desde paquete 1...
 [CC Debug] TIMEOUT
+  base: 1, next_to_send: 3, total: 3
   cwnd: 8 bytes
-  window_size: 1 MSSs
+  window_size: 1 MSSs (anterior: 2)
   state: slow start
-  ssthresh: 4
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 16 bytes
-  window_size: 2 MSSs
-  state: congestion avoidance
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 20.0 bytes
-  window_size: 2.0 MSSs
-  state: congestion avoidance
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 24.0 bytes
-  window_size: 3.0 MSSs
-  state: congestion avoidance
-
-  ✓ Enviado
-
-[Test 2] Enviando mensaje de 19 bytes...
-  Mensaje: b'Mensaje de largo 19'
-[Send GBN] Preparando envío de 19 bytes totales.
-[CC Debug]
-  MSS: 8 bytes
-  cwnd: 24.0 bytes
-  window_size: 3 MSSs
-  state: congestion avoidance
-  ssthresh: 4
-
-
-[GBN] ¡Timeout! Retransmitiendo desde paquete 0...
-[CC Debug] TIMEOUT
-  cwnd: 8 bytes
-  window_size: 1 MSSs
-  state: slow start
-  ssthresh: 12.0
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 16 bytes
-  window_size: 2 MSSs
-  state: congestion avoidance
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 20.0 bytes
-  window_size: 2.0 MSSs
-  state: congestion avoidance
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 24.0 bytes
-  window_size: 3.0 MSSs
-  state: congestion avoidance
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 26.666666666666668 bytes
-  window_size: 3.0 MSSs
-  state: congestion avoidance
-
-  ✓ Enviado
-
-[Test 3] Enviando mensaje de 19 bytes...
-  Mensaje: b'Mensaje de largo 19'
-[Send GBN] Preparando envío de 19 bytes totales.
-[CC Debug]
-  MSS: 8 bytes
-  cwnd: 26.666666666666668 bytes
-  window_size: 3 MSSs
-  state: congestion avoidance
-  ssthresh: 12.0
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 29.333333333333336 bytes
-  window_size: 3.0 MSSs
-  state: congestion avoidance
-
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 32.0 bytes
-  window_size: 4.0 MSSs
-  state: congestion avoidance
+  ssthresh: 8
+  ventana interior: [1]
 
 
 [GBN] ¡Timeout! Retransmitiendo desde paquete 2...
 [CC Debug] TIMEOUT
+  base: 2, next_to_send: 3, total: 3
   cwnd: 8 bytes
-  window_size: 1 MSSs
+  window_size: 1 MSSs (anterior: 2)
   state: slow start
-  ssthresh: 16.0
+  ssthresh: 8
+  ventana interior: [2]
 
-[CC Debug] ACK recibido (1 paquetes confirmados)
+[Send GBN] Preparando envío de 19 bytes totales.
+[CC Debug]
+  MSS: 8 bytes
   cwnd: 16 bytes
   window_size: 2 MSSs
   state: congestion avoidance
+  ssthresh: 8
 
-[CC Debug] ACK recibido (1 paquetes confirmados)
-  cwnd: 20.0 bytes
-  window_size: 2.0 MSSs
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 0...
+[CC Debug] TIMEOUT
+  base: 0, next_to_send: 2, total: 4
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 2)
+  state: slow start
+  ssthresh: 8
+  ventana interior: [0]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 3...
+[CC Debug] TIMEOUT
+  base: 3, next_to_send: 4, total: 4
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 3)
+  state: slow start
+  ssthresh: 12.0
+  ventana interior: [3]
+
+[Send GBN] Preparando envío de 19 bytes totales.
+[CC Debug]
+  MSS: 8 bytes
+  cwnd: 16 bytes
+  window_size: 2 MSSs
   state: congestion avoidance
+  ssthresh: 12.0
 
-  ✓ Enviado
 
-[Cierre] Cerrando conexión...
+[GBN] ¡Timeout! Retransmitiendo desde paquete 0...
+[CC Debug] TIMEOUT
+  base: 0, next_to_send: 2, total: 4
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 2)
+  state: slow start
+  ssthresh: 8
+  ventana interior: [0]
 
-[Close - Host A] Iniciando cierre de conexión...
-[Close - Host A] ACK recibido de Host B.
-[Close - Host A] FIN recibido de Host B.
-[Close - Host A] ¡Respuestas recibidas con éxito! Mitigando pérdidas del último ACK...
-[Close - Host A] ACK final enviado (1/3). Esperando un timeout...
-[Close - Host A] ACK final enviado (2/3). Esperando un timeout...
-[Close - Host A] ACK final enviado (3/3). Esperando un timeout...
-[Close - Host A] ¡Conexión y recursos liberados exitosamente!
-CLIENTE FINALIZADO
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 0...
+[CC Debug] TIMEOUT
+  base: 0, next_to_send: 1, total: 4
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 1)
+  state: slow start
+  ssthresh: 4
+  ventana interior: [0]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 0...
+[CC Debug] TIMEOUT
+  base: 0, next_to_send: 1, total: 4
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 1)
+  state: slow start
+  ssthresh: 4
+  ventana interior: [0]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 3...
+[CC Debug] TIMEOUT
+  base: 3, next_to_send: 4, total: 4
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 3)
+  state: slow start
+  ssthresh: 12.0
+  ventana interior: [3]
+
+[Send GBN] Preparando envío de 256 bytes totales.
+[CC Debug]
+  MSS: 8 bytes
+  cwnd: 16 bytes
+  window_size: 2 MSSs
+  state: congestion avoidance
+  ssthresh: 12.0
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 6...
+[CC Debug] TIMEOUT
+  base: 6, next_to_send: 10, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 4)
+  state: slow start
+  ssthresh: 17.0
+  ventana interior: [6]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 9...
+[CC Debug] TIMEOUT
+  base: 9, next_to_send: 12, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 3)
+  state: slow start
+  ssthresh: 13.0
+  ventana interior: [9]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 11...
+[CC Debug] TIMEOUT
+  base: 11, next_to_send: 13, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 2)
+  state: slow start
+  ssthresh: 10.0
+  ventana interior: [11]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 11...
+[CC Debug] TIMEOUT
+  base: 11, next_to_send: 12, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 1)
+  state: slow start
+  ssthresh: 4
+  ventana interior: [11]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 11...
+[CC Debug] TIMEOUT
+  base: 11, next_to_send: 12, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 1)
+  state: slow start
+  ssthresh: 4
+  ventana interior: [11]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 20...
+[CC Debug] TIMEOUT
+  base: 20, next_to_send: 24, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 4)
+  state: slow start
+  ssthresh: 19.0
+  ventana interior: [20]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 20...
+[CC Debug] TIMEOUT
+  base: 20, next_to_send: 21, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 1)
+  state: slow start
+  ssthresh: 4
+  ventana interior: [20]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 22...
+[CC Debug] TIMEOUT
+  base: 22, next_to_send: 24, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 2)
+  state: slow start
+  ssthresh: 10.0
+  ventana interior: [22]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 23...
+[CC Debug] TIMEOUT
+  base: 23, next_to_send: 25, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 2)
+  state: slow start
+  ssthresh: 8
+  ventana interior: [23]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 26...
+[CC Debug] TIMEOUT
+  base: 26, next_to_send: 29, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 3)
+  state: slow start
+  ssthresh: 12.0
+  ventana interior: [26]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 31...
+[CC Debug] TIMEOUT
+  base: 31, next_to_send: 33, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 3)
+  state: slow start
+  ssthresh: 14.0
+  ventana interior: [31]
+
+
+[GBN] ¡Timeout! Retransmitiendo desde paquete 32...
+[CC Debug] TIMEOUT
+  base: 32, next_to_send: 33, total: 33
+  cwnd: 8 bytes
+  window_size: 1 MSSs (anterior: 2)
+  state: slow start
+  ssthresh: 8
+  ventana interior: [32]
+
+## server
+
+python3 server.py 
+[SocketTCP] Escuchando (bind) en ('192.168.1.109', 8000)
+[SocketTCP] Escuchando (bind) en ('192.168.1.109', 0)
+[Recv GBN] Se espera recibir un mensaje de 16 bytes.
+Test 1 received: b'Mensje de len=16'
+Test 1: Passed
+
+[Recv GBN] Se espera recibir un mensaje de 19 bytes.
+Test 2 received: b'Mensaje de largo 19'
+Test 2: Passed
+
+[Recv GBN] Se espera recibir un mensaje de 19 bytes.
+Test 3 received: b'Mensaje de largo 19'
+Test 3: Passed
+
+Test 4: Edge case - delaying ACKs...
+[Recv GBN] Se espera recibir un mensaje de 256 bytes.
+Test 4 received bytes: 256
+Test 4: Passed

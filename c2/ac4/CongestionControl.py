@@ -12,11 +12,11 @@ class CongestionControl():
 
     def __init__(self, MSS: int):
         self.MSS = MSS
-        self.cwnd = 1 * MSS  # Comienza como 1 MSS
-        self.current_state = "slow start"  # Comienza en slow start
-        self.ssthresh = None  # Se define después del primer timeout
+        self.cwnd = 1 * MSS  
+        self.current_state = "slow start"  
+        self.ssthresh = None 
 
-        
+
     def get_cwnd(self):
         # Retorna el valor cwnd almacenado en bytes.
         return self.cwnd
