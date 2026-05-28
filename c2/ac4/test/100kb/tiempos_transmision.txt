@@ -1,2 +1,24 @@
+Resultados de la transmisión de 100KB 8 MSS
+22893 segmentos enviados
+437.0147 segundos
+
+Resultados de la transmisión de 100KB 100 MSS
+1782 segmentos enviados
+32.6867 segundos
+
 Resultados de la transmisión de 100KB
-2.9570 segundos
+1790 segmentos enviados
+31.9054 segundos
+
+Resultados de la transmisión de 100KB
+1822 segmentos enviados
+35.5845 segundos
+
+Resultados de la transmisión de 100KB
+1782 segmentos enviados
+32.0663 segundos
+
+Resultados de la transmisión de 100KB
+1751 segmentos enviados
+29.9045 segundos
+

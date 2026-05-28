@@ -4,17 +4,14 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from socket_tcp import SocketTCP
 
-IP = '127.0.0.1'
+IP = '192.168.1.109'
 PUERTO = 8000
 address = (IP, PUERTO)
-switch_mode = 1
 EDGE_MESSAGE_BYTES = 256
-
 
 client_socketTCP = SocketTCP()
 client_socketTCP.connect(address)
-
-modo = "go_back_n" if switch_mode == 1 else "stop_and_wait"
+modo = "go_back_n"
 
 # test 1
 message = "Mensje de len=16".encode()
@@ -31,4 +28,3 @@ client_socketTCP.send(message, mode=modo)
 # test 4 (caso borde)
 message = bytes([i % 256 for i in range(EDGE_MESSAGE_BYTES)])
 client_socketTCP.send(message, mode=modo)
-print("\n se cerro la conexion")

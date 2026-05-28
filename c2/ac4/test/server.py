@@ -4,17 +4,15 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from socket_tcp import SocketTCP
 
-IP = '127.0.0.1'
+IP = '192.168.1.109'
 PUERTO = 8000
 address = (IP, PUERTO)
-switch_mode = 1
 EDGE_MESSAGE_BYTES = 256
 
 server_socketTCP = SocketTCP()
 server_socketTCP.bind(address)
 connection_socketTCP, new_address = server_socketTCP.accept()
-
-modo = "go_back_n" if switch_mode == 1 else "stop_and_wait"
+modo = "go_back_n"
 
 # test 1
 buff_size = 16

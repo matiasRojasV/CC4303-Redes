@@ -8,7 +8,7 @@ IP = '192.168.1.109'
 PUERTO = 8000
 address = (IP, PUERTO)
 
-client_socketTCP = SocketTCP()
+client_socketTCP = SocketTCP(num_MSS=100)
 client_socketTCP.connect(address)
 client_socketTCP.DEBUG_CC = False
 modo = "go_back_n"
@@ -33,8 +33,9 @@ segmentos_enviados = client_socketTCP.number_of_sent_segments - segmentos_inicia
 print(f"tiempo={tiempo_total:.4f}s, segmentos enviados en este intento={segmentos_enviados}")
 
 resultados_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tiempos_transmision.txt")
-with open(resultados_path, "w") as f_out:
+with open(resultados_path, "a") as f_out:
     f_out.write("Resultados de la transmisión de 100KB\n")
-    f_out.write(f"{tiempo_total:.4f} segundos\n")
+    f_out.write(f"{segmentos_enviados} segmentos enviados\n")
+    f_out.write(f"{tiempo_total:.4f} segundos\n\n")
     
 print(f"\n¡Prueba finalizada! Los tiempos se han guardado en:\n {resultados_path}")

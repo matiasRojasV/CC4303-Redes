@@ -9,7 +9,7 @@ class SocketTCP:
     # Modo debug para congestion control
     DEBUG_CC = False
     
-    def __init__(self):
+    def __init__(self, num_MSS=8):
         self.socket_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.direccion_origen = None
         self.direccion_destino = None
@@ -21,7 +21,7 @@ class SocketTCP:
         self.bytes_esperados = 0
         self.buffer_recepcion = b""
         self.num_max_secuencia = 256
-        self.congestion_controler = cc.CongestionControl(1000)
+        self.congestion_controler = cc.CongestionControl(num_MSS)
         self.number_of_sent_segments = 0
 
 
@@ -366,7 +366,7 @@ class SocketTCP:
         print(f"  Timeout: {self.TIMEOUT}s\n")
         
     
-        # 1. Preparar los datos a enviar
+        # Preparar los datos a enviar
         data_list = []
         largo_msg_bytes = str(len(message)).encode('utf-8')
         data_list.append(largo_msg_bytes)
@@ -378,7 +378,7 @@ class SocketTCP:
             
         total_packets = len(data_list)
             
-        # 2. Inicializar parametros de GBN usando congestion controller
+        # Iniciar param de GBN usando congestion controller
         raw_ws = int(self.congestion_controler.get_MSS_in_cwnd())
         window_size = max(1, min(raw_ws, self.num_max_secuencia - 1))
         window = SlidingWindowCC(window_size, data_list, self.seq_num_a_enviar)
@@ -397,24 +397,24 @@ class SocketTCP:
         
         self.socket_udp.settimeout(self.TIMEOUT)
         
-        base = 0  # indice del primer paquete no confirmado
-        next_to_send = 0  # indice del siguiente paquete a enviar
+        base = 0  
+        next_to_send = 0 
         initial_seq = self.seq_num_a_enviar
         highest_sent = 0
         last_ack_seq = None
         final_packet_timeouts = 0
         FINAL_PACKET_RETRIES = 5
 
-        # 3. Ciclo principal de GBN
+        # Ciclo principal de GBN
         while base < total_packets:
             
-            # 3.1 ENVIAR paquetes hasta llenar la ventana
+            # Enviar paquetes hasta llenar la ventana
             while next_to_send < base + window_size and next_to_send < total_packets:
                 data = window.get_data(next_to_send - base)
                 seq = (self.seq_num_a_enviar + next_to_send) % self.num_max_secuencia
                 segmento = self.create_segment(data, seq, syn=0, ack=0, fin=0)
                 
-                # Enviar con un timer (reiniciado cada envío)
+                # Enviar con un timer
                 self.socket_udp.sendto(segmento, self.direccion_destino)
                 self.number_of_sent_segments += 1
                 next_to_send += 1
@@ -422,7 +422,7 @@ class SocketTCP:
                 highest_sent = max(highest_sent, next_to_send)
             
             try:
-                # 3.2 ESPERAR ACK
+                # Esperar ACK
                 msg_ack, _ = self.socket_udp.recvfrom(4096)
                 ack_segmento = self.parse_segment(msg_ack)
                 
@@ -432,7 +432,7 @@ class SocketTCP:
                     self.socket_udp.sendto(ack_seg, self.direccion_destino)
                     continue
                 
-                # Procesar ACK acumulativo (ACK indica el siguiente seq esperado)
+                # Procesar ACK acumulativo
                 if ack_segmento['ack'] == 1 and ack_segmento['syn'] == 0:
                     ack_seq = ack_segmento['seq_num']
                     last_ack_seq = ack_seq
@@ -471,20 +471,18 @@ class SocketTCP:
                         window.update_window_size(window_size)
                                  
             except (socket.timeout, TimeoutError):
-                # 3.3 TIMEOUT: Retransmitir TODOS los paquetes desde la base (GBN puro)
+                # Retransmitir los paquetes
                 if base == total_packets - 1 and next_to_send == total_packets:
                     final_packet_timeouts += 1
                     if final_packet_timeouts >= FINAL_PACKET_RETRIES:
-                        # Asumir que el ultimo ACK se perdio pero el receptor recibio el dato
                         window.move_window(1)
                         base += 1
                         self.congestion_controler.event_ack_received()
                         continue
 
-                print(f"\n[GBN] ¡Timeout! Retransmitiendo desde paquete {base}...")
+                print(f"\n[GBN] Timeout Retransmitiendo desde paquete {base}...")
                 if self.DEBUG_CC:
                     base_seq = (initial_seq + base) % self.num_max_secuencia
-                    expected_ack = base_seq
                     last_sent_seq = (initial_seq + next_to_send - 1) % self.num_max_secuencia if next_to_send > 0 else None
                     pkts_en_vuelo = next_to_send - base
                     print("[CC Debug] Contexto TIMEOUT")
@@ -511,7 +509,7 @@ class SocketTCP:
                     ventana_actual = list(range(base, min(base + window_size, total_packets)))
                     cwnd_bytes = self.congestion_controler.get_cwnd()
                     print(f"[CC Debug] Reacción a TIMEOUT (Congestion Control)")
-                    print(f"    Transición de estado: → {self.congestion_controler.current_state}")
+                    print(f"    Transición de estado: -> {self.congestion_controler.current_state}")
                     print(f"    cwnd: {cwnd_bytes} bytes")
                     print(f"    window_size: {window_size} MSS (cambio: {old_window_size} → {window_size})")
                     print(f"    ssthresh: {self.congestion_controler.ssthresh}")
@@ -520,12 +518,10 @@ class SocketTCP:
                     print()
                 
                 # Resetear el timer para poder reutilizarlo
-                try:
-                    if hasattr(self.socket_udp, 'timer_list') and self.socket_udp.timer_list[0] is not None:
+                if hasattr(self.socket_udp, 'timer_list') and len(self.socket_udp.timer_list) > 0:
+                    if self.socket_udp.timer_list[0] is not None:
                         self.socket_udp.stop_timer(0)
-                except:
-                    pass
-                
+                        
                 next_to_send = base
         
         # Desactivar timeout
@@ -537,7 +533,6 @@ class SocketTCP:
 
     def _recv_gbn(self):
         """Versión de recepción confiable que usa la lógica de secuencias de GBN"""
-        # Desactivamos el timeout para quedarnos bloqueados esperando
         self.socket_udp.settimeout(None)
         
         while True:
@@ -547,7 +542,7 @@ class SocketTCP:
             if segmento['syn'] == 0 and segmento['ack'] == 0:
                 if segmento['seq_num'] == self.seq_num_esperado:
                     
-                    # Incrementar al siguiente número de secuencia (con aritmética modular)
+                    # Incrementar al siguiente número de secuencia
                     self.seq_num_esperado = (self.seq_num_esperado + 1) % self.num_max_secuencia
                     
                     # Enviar ACK confirmando el próximo paquete que esperamos
@@ -556,8 +551,7 @@ class SocketTCP:
                     
                     return segmento['data']
                 
-                # Si llega fuera de orden, descartarlo y reenviar 
-                # el ACK del último paquete recibido (self.seq_num_esperado).
+                # Si llega fuera de orden, descartarlo y reenviar el ACK del último paquete
                 ack_seg = self.create_segment(b"", self.seq_num_esperado, syn=0, ack=1, fin=0)
                 self.socket_udp.sendto(ack_seg, addr)
 
