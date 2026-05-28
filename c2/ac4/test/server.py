@@ -4,7 +4,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from socket_tcp import SocketTCP
 
-IP = '192.168.1.109'
+IP = '127.0.0.1'
 PUERTO = 8000
 address = (IP, PUERTO)
 switch_mode = 1
@@ -57,4 +57,5 @@ if received == expected:
     print("Test 4: Passed\n")
 else:
     print("Test 4: Failed\n")
+
 

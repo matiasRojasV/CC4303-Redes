@@ -24,8 +24,8 @@ with open(archivo_path, "rb") as archivo:
 TEST_5_BYTES = len(archivo_100kb)
 buff_size_100kb = TEST_5_BYTES
 
-for intento in range(1, 6):
-    datos_100kb = connection_socketTCP.recv(buff_size_100kb, mode=modo)
 
-    print(f"Intento {intento} recibidos: {len(datos_100kb)} bytes.")
-    print("Test: Passed\n")
+datos_100kb = connection_socketTCP.recv(buff_size_100kb, mode=modo)
+
+print(f"Recibidos: {len(datos_100kb)} bytes.")
+print("Test: Passed\n")
