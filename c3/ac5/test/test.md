@@ -1,7 +1,7 @@
 # Ejemplo 1
 ## Levantar los Routers
-python3 router.py 127.0.0.1 8881 tabla_de_rutas/rutas_R1_v1.txt
-python3 router.py 127.0.0.1 8882 tabla_de_rutas/rutas_R2_v1.txt
+python3 router.py 127.0.0.1 8881 tabla_de_rutas/v1/rutas_R1_v1.txt
+python3 router.py 127.0.0.1 8882 tabla_de_rutas/v1/rutas_R2_v1.txt
 
 
 ## Caso A: Mandar un mensaje a R1 cuyo destino final es el mismo R1
@@ -13,12 +13,92 @@ python3 sender.py 127.0.0.1 8882 "hola R2!" 127.0.0.1 8881
 
 # Ejemplo 2
 ## Levantar los Routers
-python3 router.py 127.0.0.1 8881 tabla_de_rutas/rutas_R1_v2.txt
-python3 router.py 127.0.0.1 8882 tabla_de_rutas/rutas_R2_v2.txt
-python3 router.py 127.0.0.1 8883 tabla_de_rutas/rutas_R3_v2.txt
+python3 router.py 127.0.0.1 8881 tabla_de_rutas/v2/rutas_R1_v2.txt
+python3 router.py 127.0.0.1 8882 tabla_de_rutas/v2/rutas_R2_v2.txt
+python3 router.py 127.0.0.1 8883 tabla_de_rutas/v2/rutas_R3_v2.txt
 
 ## Caso A: Encriptar y enviar un mensaje desde R1 hacia el extremo R3 (Multi-salto)
 python3 sender.py 127.0.0.1 8883 "Mensaje cruzando todo el mini-Internet" 127.0.0.1 8881
 
 ## Caso B: Enviar un paquete a un destino fuera de rango (Descarte de paquetes)
 python3 sender.py 127.0.0.1 8884 "Hola, ¿hay alguien ahí?" 127.0.0.1 8881
+
+
+
+# test roundrobin
+cd c3/ac5
+python3 router.py 127.0.0.1 8881 c3/ac5/tabla_de_rutas/v3/rutas_R1_v3.txt
+python3 router.py 127.0.0.1 8882 c3/ac5/tabla_de_rutas/v3/rutas_R2_v3.txt 
+python3 router.py 127.0.0.1 8883 c3/ac5/tabla_de_rutas/v3/rutas_R3_v3.txt 
+python3 router.py 127.0.0.1 8884 c3/ac5/tabla_de_rutas/v3/rutas_R4_v3.txt 
+python3 router.py 127.0.0.1 8885 c3/ac5/tabla_de_rutas/v3/rutas_R5_v3.txt 
+
+
+python3 sender.py 127.0.0.1 8881 "cruzando todo el mini-Internet" 127.0.0.1 8885
+r5 -> r4 -> r2 -> r1
+r5 -> r3 -> r2 -> r1
+r5 -> r4 -> r2 -> r1
+
+
+# test roundrobin v2
+python3 c3/ac5/router.py 127.0.0.1 8880 c3/ac5/tabla_de_rutas/v3/rutas_R0_v3.txt
+python3 c3/ac5/router.py 127.0.0.1 8881 c3/ac5/tabla_de_rutas/v3/rutas_R1_v3.txt
+python3 c3/ac5/router.py 127.0.0.1 8882 c3/ac5/tabla_de_rutas/v3/rutas_R2_v3.txt 
+python3 c3/ac5/router.py 127.0.0.1 8883 c3/ac5/tabla_de_rutas/v3/rutas_R3_v3.txt 
+python3 c3/ac5/router.py 127.0.0.1 8884 c3/ac5/tabla_de_rutas/v3/rutas_R4_v3.txt 
+python3 c3/ac5/router.py 127.0.0.1 8885 c3/ac5/tabla_de_rutas/v3/rutas_R5_v3.txt 
+python3 c3/ac5/router.py 127.0.0.1 8886 c3/ac5/tabla_de_rutas/v3/rutas_R6_v3.txt
+
+
+python3 c3/ac5/sender.py 127.0.0.1 8881 "cruzando todo el mini-Internet" 127.0.0.1 8885
+
+54201
+5321
+54201
+5321
+536201
+5421
+53201
+
+python3 c3/ac5/sender.py 127.0.0.1 8885 "cruzando todo el mini-Internet" 127.0.0.1 8881
+1235
+1245
+10235
+1245
+12635
+10235
+1245
+1235
+
+
+
+# test roundrobin default router
+python3 c3/ac5/router.py 127.0.0.1 8880 c3/ac5/tabla_de_rutas/v3/rutas_R0_v3.txt
+python3 c3/ac5/router.py 127.0.0.1 8881 c3/ac5/tabla_de_rutas/v3/rutas_R1_v3.txt
+python3 c3/ac5/router.py 127.0.0.1 8882 c3/ac5/tabla_de_rutas/v3/rutas_R2_v3.txt 
+python3 c3/ac5/router.py 127.0.0.1 8883 c3/ac5/tabla_de_rutas/v3/rutas_R3_v3.txt 
+python3 c3/ac5/router.py 127.0.0.1 8884 c3/ac5/tabla_de_rutas/v3/rutas_R4_v3.txt 
+python3 c3/ac5/router.py 127.0.0.1 8885 c3/ac5/tabla_de_rutas/v3/rutas_R5_v3.txt 
+python3 c3/ac5/router.py 127.0.0.1 8886 c3/ac5/tabla_de_rutas/v3/rutas_R6_v3.txt
+python3 c3/ac5/router.py 127.0.0.1 7000 c3/ac5/tabla_de_rutas/v3/rutas_RD_v3.txt
+
+python3 c3/ac5/sender.py 127.0.0.1 8881 "cruzando todo el mini-Internet" 127.0.0.1 8885
+
+54201
+5321
+54201
+5321
+536201
+5421
+53201
+
+python3 c3/ac5/sender.py 127.0.0.1 8885 "cruzando todo el mini-Internet" 127.0.0.1 8881
+1235
+1245
+10235
+1245
+12635
+10235
+1245
+1235
+

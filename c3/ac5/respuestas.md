@@ -12,7 +12,7 @@
 
 
 
-Mecanismo de Recepción de Información:
+# Mecanismo de Recepción de Información:
 Para la interacción con el script emisor, se optó por una interfaz de línea de comandos basada en argumentos posicionales (sys.argv). La sintaxis definida para la ejecución del programa es la siguiente:
 Bash
 
@@ -25,3 +25,21 @@ Justificación técnica de la elección:
     Automatización: El uso de parámetros por consola evita las interrupciones por bloqueos de entrada interactiva (input()), facilitando la creación posterior de scripts automatizados (archivos .sh o .bat) que levanten múltiples emisores en paralelo dentro del escenario del mini-Internet.
 
     Manejo de strings complejos: Al encerrar el mensaje entre comillas dobles, el sistema operativo interpreta la cadena de texto completa como un único argumento, permitiendo el envío seguro de mensajes que contengan espacios.
+
+
+
+
+
+
+# **Manejo de Round-Robin**
+
+Para el balanceo de carga se utilizó Programación Orientada a Objetos mediante la clase `RouterState`, la cual centraliza y aísla el historial de reenvíos en un diccionario interno llamado `areas_state`:
+
+* **Identificación por Área:** Cada zona o subred se registra de forma independiente usando una tupla `(cidr, puerto_inicio, puerto_final)` como clave del diccionario. Esto permite al router escalar y memorizar rutas en paralelo para un número arbitrario de destinos independientes.
+* **Algoritmo de Rotación:** Al resolver el siguiente salto en `check_routes`, el método `get_next_route` selecciona el camino correspondiente al índice actual de esa subred y actualiza la posición usando aritmética modular: `(current_index + 1) % len(matching_routes)`.
+
+Este diseño distribuye el tráfico de manera estrictamente equitativa y cíclica entre los enlaces redundantes disponibles, evitando la sobrecarga y prescindiendo del uso de variables globales complejas.
+
+
+
+

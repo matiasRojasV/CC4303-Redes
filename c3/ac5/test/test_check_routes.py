@@ -8,9 +8,9 @@ def ejecutar_pruebas_reales():
     print("Test de enrutamiento\n")
     
     # Definimos los caminos subiendo un nivel antes de entrar a tabla_de_rutas
-    ruta_r1 = "tabla_de_rutas/rutas_R1_v2.txt"
-    ruta_r2 = "tabla_de_rutas/rutas_R2_v2.txt"
-    ruta_r3 = "tabla_de_rutas/rutas_R3_v2.txt"
+    ruta_r1 = "tabla_de_rutas/v2/rutas_R1_v2.txt"
+    ruta_r2 = "tabla_de_rutas/v2/rutas_R2_v2.txt"
+    ruta_r3 = "tabla_de_rutas/v2/rutas_R3_v2.txt"
 
 
     # Caso 1: Paquete en R1 con destino final R3 (IP: 127.0.0.1, Puerto: 8883)

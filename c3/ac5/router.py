@@ -2,6 +2,37 @@ import sys
 import socket
 
 
+class RouterState:
+    # Mantiene el estado de round-robin para cada área de red.
+    def __init__(self):
+        # Diccionario: clave = (cidr, puerto_inicio, puerto_final), valor = índice_última_ruta
+        self.areas_state = {}
+    
+    def get_next_route(self, matching_routes: list, area_key: tuple) -> dict:
+        # Retorna la siguiente ruta en orden round-robin para un área específica.
+        if not matching_routes:
+            return None
+        
+        # Si es la primera vez para esta área, empezar en 0
+        if area_key not in self.areas_state:
+            self.areas_state[area_key] = 0
+        
+        # Obtener el índice actual
+        current_index = self.areas_state[area_key]
+        
+        # Seleccionar la ruta
+        selected_route = matching_routes[current_index]
+        
+        # Actualizar el índice (round-robin)
+        next_index = (current_index + 1) % len(matching_routes)
+        self.areas_state[area_key] = next_index
+        
+        return selected_route
+
+# Instancia global para mantener estado entre llamadas
+_router_state = RouterState()
+
+
 def cargar_tabla_rutas(archivo_path):
     tabla = []
     try:
@@ -74,9 +105,12 @@ def create_packet(parsed_IP_packet: dict) -> bytes:
     return ip_bytes + puerto_bytes + mensaje_bytes
 
 
-def check_routes(routes_file_name: str, destination_address: tuple[str, int])-> tuple[str, int]:
-    # revisar en orden la tabla de rutas para indicar la dirección del siguiente salto
+def check_routes(routes_file_name: str, destination_address: tuple[str, int], router_state: RouterState = None)-> tuple[str, int]:
+    # Busca rutas en la tabla de enrutamiento y aplica round-robin si hay múltiples opciones.
     dest_ip_str, dest_port = destination_address
+    
+    # Usar la instancia global si no se proporciona una
+    state = router_state if router_state is not None else _router_state
     
     # Validar que la IP de destino sea una dirección IPv4 válida
     tabla_rutas = cargar_tabla_rutas(routes_file_name)
@@ -84,28 +118,38 @@ def check_routes(routes_file_name: str, destination_address: tuple[str, int])-> 
     if not tabla_rutas:
         return None
 
-    # Recorrer la lista de diccionarios buscando el Gateway
+    # Encontrar todas las rutas que coinciden con el destino
+    matching_routes = []
+    area_key = None
+    
     for ruta in tabla_rutas:
         # Usamos split('/')[0] para quedarnos solo con "127.0.0.1" y compararla.
         ip_red = ruta['cidr'].split('/')[0]
         
         # Coincidencia de IP y que el puerto esté en rango
         if dest_ip_str == ip_red and ruta['puerto_inicio'] <= dest_port <= ruta['puerto_final']:
-            return (ruta['ip_gateway'], ruta['puerto_gateway'])
+            matching_routes.append(ruta)
+
+            # Crear la clave del área (CIDR, rango de puertos)
+            area_key = (ruta['cidr'], ruta['puerto_inicio'], ruta['puerto_final'])
+    
+    # Si hay al menos una ruta, aplicar round-robin
+    if matching_routes:
+        selected_route = state.get_next_route(matching_routes, area_key)
+        return (selected_route['ip_gateway'], selected_route['puerto_gateway'])
             
     # Retorna None si no hay coincidencias
     return None
 
 
-
 def init_router(ip: str, puerto: int, archivo_rutas: str):
-    # Bucle principal del router UDP.
     # Configurar el socket de escucha 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    
     sock.bind((ip, puerto))
     print(f"Servidor router escuchando en {ip}:{puerto}\n")
+    
+    # Usar la instancia global de estado del router
+    router_state = _router_state
     
     # Bucle de escucha
     try:
@@ -124,7 +168,7 @@ def init_router(ip: str, puerto: int, archivo_rutas: str):
                 print(f"Contenido del mensaje: {parsed_IP_packet['mensaje']}\n")
 
             else:
-                next_hop = check_routes(archivo_rutas, destination_address)
+                next_hop = check_routes(archivo_rutas, destination_address, router_state)
                 
                 if next_hop:
                     # Hacer forward del paquete original en bytes hacia el siguiente salto
@@ -142,7 +186,7 @@ def init_router(ip: str, puerto: int, archivo_rutas: str):
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Uso correcto: python3 router.py router_IP router_puerto router_rutas.txt")
+        print("Uso correcto: python3 router_roundrobin.py router_IP router_puerto router_rutas.txt")
         sys.exit(1)
 
     ip_arg = sys.argv[1]
@@ -150,4 +194,3 @@ if __name__ == "__main__":
     archivo_arg = sys.argv[3]
 
     init_router(ip_arg, puerto_arg, archivo_arg)
-    

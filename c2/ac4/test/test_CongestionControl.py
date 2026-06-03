@@ -1,5 +1,8 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from CongestionControl import CongestionControl as cc
 import CongestionControl as cc
-
 
 # tests
 def initialization_test(congestion_controler, MSS):

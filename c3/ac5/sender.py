@@ -1,17 +1,10 @@
 import sys
 import socket
+import os
 
-def create_packet(ip_final, puerto_final, mensaje):
-    # Construye el paquete binario con el header de 6 bytes usando el destino final.
-    # Codificar la IP (4 bytes)
-    componentes_ip = [int(x) for x in ip_final.split('.')]
-    ip_bytes = bytes(componentes_ip)
-    
-    # Codificar el Puerto final (2 bytes, big-endian)
-    puerto_bytes = puerto_final.to_bytes(2, byteorder='big')
-    mensaje_bytes = mensaje.encode('utf-8')
-
-    return ip_bytes + puerto_bytes + mensaje_bytes
+# Agregar el directorio padre al path para importar router_roundrobin
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from router import create_packet as create_packet_router
 
 def enviar_paquete():
     # Validar la cantidad de argumentos
@@ -21,18 +14,16 @@ def enviar_paquete():
         sys.exit(1)
 
     # Asignación y parseo de parámetros
-    try:
-        ip_final = sys.argv[1]
-        puerto_final = int(sys.argv[2])
-        mensaje = sys.argv[3]
-        ip_envio = sys.argv[4]
-        puerto_envio = int(sys.argv[5])
-    except ValueError:
-        print("Error: Los puertos deben ser números enteros válidos.")
-        sys.exit(1)
+ 
+    ip_final = sys.argv[1]
+    puerto_final = int(sys.argv[2])
+    mensaje = sys.argv[3]
+    ip_envio = sys.argv[4]
+    puerto_envio = int(sys.argv[5])
+
 
     # Crear el paquete con la estructura
-    paquete_bytes = create_packet(ip_final, puerto_final, mensaje)
+    paquete_bytes = create_packet_router({'ip': ip_final, 'puerto': puerto_final, 'mensaje': mensaje})
     
     # Crear el socket UDP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

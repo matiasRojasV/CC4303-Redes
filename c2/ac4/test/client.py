@@ -14,15 +14,15 @@ client_socketTCP.connect(address)
 modo = "go_back_n"
 
 # test 1
-message = "Mensje de len=16".encode()
+message = "Mensje de len=16".encode('utf-8')
 client_socketTCP.send(message, mode=modo)
 
 # test 2
-message = "Mensaje de largo 19".encode()
+message = "Mensaje de largo 19".encode('utf-8')
 client_socketTCP.send(message, mode=modo)
 
 # test 3
-message = "Mensaje de largo 19".encode()
+message = "Mensaje de largo 19".encode('utf-8')
 client_socketTCP.send(message, mode=modo)
 
 # test 4 (caso borde)

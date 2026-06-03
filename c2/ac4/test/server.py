@@ -18,7 +18,7 @@ modo = "go_back_n"
 buff_size = 16
 full_message = connection_socketTCP.recv(buff_size, mode=modo)
 print("Test 1 received:", full_message)
-if full_message == "Mensje de len=16".encode():
+if full_message == "Mensje de len=16".encode('utf-8'):
     print("Test 1: Passed\n")
 else:
     print("Test 1: Failed\n")
@@ -27,7 +27,7 @@ else:
 buff_size = 19
 full_message = connection_socketTCP.recv(buff_size, mode=modo)
 print("Test 2 received:", full_message)
-if full_message == "Mensaje de largo 19".encode():
+if full_message == "Mensaje de largo 19".encode('utf-8'):
     print("Test 2: Passed\n")
 else:
     print("Test 2: Failed\n")
@@ -37,7 +37,7 @@ buff_size = 14
 message_part_1 = connection_socketTCP.recv(buff_size, mode=modo)
 message_part_2 = connection_socketTCP.recv(buff_size, mode=modo)
 print("Test 3 received:", message_part_1 + message_part_2)
-if (message_part_1 + message_part_2) == "Mensaje de largo 19".encode():
+if (message_part_1 + message_part_2) == "Mensaje de largo 19".encode('utf-8'):
     print("Test 3: Passed\n")
 else:
     print("Test 3: Failed\n")
@@ -47,8 +47,10 @@ print("Test 4: Edge case - delaying ACKs...")
 time.sleep(2)
 buff_size = 128
 received = bytearray()
+
 while len(received) < EDGE_MESSAGE_BYTES:
     received += connection_socketTCP.recv(buff_size, mode=modo)
+
 expected = bytes([i % 256 for i in range(EDGE_MESSAGE_BYTES)])
 print("Test 4 received bytes:", len(received))
 if received == expected:
