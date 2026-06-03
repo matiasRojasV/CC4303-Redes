@@ -62,7 +62,6 @@ def cargar_tabla_rutas(archivo_path):
 
 def parse_packet(IP_packet: bytes) -> dict:
     # permite extraer los headers y datos del paquete recibido, y lo parsea a una estructura de datos
-
     # Extraer los 4 bytes de la dirección IP y convertirlos al formato a.b.c.d
     ip_bytes = IP_packet[0:4]
     ip = f"{ip_bytes[0]}.{ip_bytes[1]}.{ip_bytes[2]}.{ip_bytes[3]}"
@@ -168,6 +167,10 @@ def init_router(ip: str, puerto: int, archivo_rutas: str):
 
             # Analizar el paquete binario
             parsed_IP_packet = parse_packet(datos)
+            if parsed_IP_packet['ttl'] <= 0:
+                print(f"Se recibió paquete {parsed_IP_packet['ip']} con TTL 0.")
+                continue
+
             destination_address = (parsed_IP_packet['ip'], parsed_IP_packet['puerto'])
             router_actual = (ip, puerto)
 
@@ -177,18 +180,20 @@ def init_router(ip: str, puerto: int, archivo_rutas: str):
                 print(f"Contenido del mensaje: {parsed_IP_packet['mensaje']}\n")
 
             else:
-                next_hop = check_routes(archivo_rutas, destination_address, router_state)
-
-                #obtener el nro del router (DEBUG)
+                #obtener el nro del router (DEBUG print)
                 numero_str = str(puerto)
                 if numero_str.startswith('7'):
                     router_num = int(numero_str[0])
                 else:
                     router_num = puerto % 10
 
+                next_hop = check_routes(archivo_rutas, destination_address, router_state)
+                parsed_IP_packet['ttl'] -= 1
+                datos_env = create_packet(parsed_IP_packet)
+
                 if next_hop:
-                    # Hacer forward del paquete original en bytes hacia el siguiente salto
-                    sock.sendto(datos, next_hop)
+                    # Hacer forward del paquete en bytes hacia el siguiente salto
+                    sock.sendto(datos_env, next_hop)
                     print(f"\n[{router_num}] redirigiendo paquete hacia {next_hop[1]}")
                 else:
                     # Descartar el paquete si check_routes retorna None

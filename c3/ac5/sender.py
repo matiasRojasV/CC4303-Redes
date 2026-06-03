@@ -14,16 +14,16 @@ def enviar_paquete():
         sys.exit(1)
 
     # Asignación y parseo de parámetros
- 
     ip_final = sys.argv[1]
     puerto_final = int(sys.argv[2])
+    ttl = 1
     mensaje = sys.argv[3]
     ip_envio = sys.argv[4]
     puerto_envio = int(sys.argv[5])
 
 
     # Crear el paquete con la estructura
-    paquete_bytes = create_packet_router({'ip': ip_final, 'puerto': puerto_final, 'mensaje': mensaje})
+    paquete_bytes = create_packet_router({'ip': ip_final, 'puerto': puerto_final, 'ttl': ttl, 'mensaje': mensaje})
     
     # Crear el socket UDP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -32,10 +32,6 @@ def enviar_paquete():
         # Enviar el paquete hacia la dirección de envío
         sock.sendto(paquete_bytes, (ip_envio, puerto_envio))
         print(f"Paquete enviado con éxito.")
-    
-    except Exception as e:
-        print(f"Error al enviar el paquete: {e}")
-    
     finally:
         sock.close()
 

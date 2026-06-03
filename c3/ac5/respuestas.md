@@ -14,7 +14,6 @@
 
 # Mecanismo de Recepción de Información:
 Para la interacción con el script emisor, se optó por una interfaz de línea de comandos basada en argumentos posicionales (sys.argv). La sintaxis definida para la ejecución del programa es la siguiente:
-Bash
 
 % python3 sender.py IP_final puerto_final "mensaje" IP_envio puerto_envio
 
