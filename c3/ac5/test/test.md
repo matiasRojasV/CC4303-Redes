@@ -41,17 +41,16 @@ r5 -> r4 -> r2 -> r1
 
 
 # test roundrobin v2
-python3 c3/ac5/router.py 127.0.0.1 8880 c3/ac5/tabla_de_rutas/v3/rutas_R0_v3.txt
-python3 c3/ac5/router.py 127.0.0.1 8881 c3/ac5/tabla_de_rutas/v3/rutas_R1_v3.txt
-python3 c3/ac5/router.py 127.0.0.1 8882 c3/ac5/tabla_de_rutas/v3/rutas_R2_v3.txt 
-python3 c3/ac5/router.py 127.0.0.1 8883 c3/ac5/tabla_de_rutas/v3/rutas_R3_v3.txt 
-python3 c3/ac5/router.py 127.0.0.1 8884 c3/ac5/tabla_de_rutas/v3/rutas_R4_v3.txt 
-python3 c3/ac5/router.py 127.0.0.1 8885 c3/ac5/tabla_de_rutas/v3/rutas_R5_v3.txt 
-python3 c3/ac5/router.py 127.0.0.1 8886 c3/ac5/tabla_de_rutas/v3/rutas_R6_v3.txt
+python3 c3/ac5/router.py 127.0.0.1 8880 c3/ac5/tabla_de_rutas/v3/rutas_R0_v4.txt
+python3 c3/ac5/router.py 127.0.0.1 8881 c3/ac5/tabla_de_rutas/v3/rutas_R1_v4.txt
+python3 c3/ac5/router.py 127.0.0.1 8882 c3/ac5/tabla_de_rutas/v3/rutas_R2_v4.txt 
+python3 c3/ac5/router.py 127.0.0.1 8883 c3/ac5/tabla_de_rutas/v3/rutas_R3_v4.txt 
+python3 c3/ac5/router.py 127.0.0.1 8884 c3/ac5/tabla_de_rutas/v3/rutas_R4_v4.txt 
+python3 c3/ac5/router.py 127.0.0.1 8885 c3/ac5/tabla_de_rutas/v3/rutas_R5_v4.txt 
+python3 c3/ac5/router.py 127.0.0.1 8886 c3/ac5/tabla_de_rutas/v3/rutas_R6_v4.txt
 
 
 python3 c3/ac5/sender.py 127.0.0.1 8881 "cruzando todo el mini-Internet" 127.0.0.1 8885
-
 54201
 5321
 54201
@@ -73,32 +72,19 @@ python3 c3/ac5/sender.py 127.0.0.1 8885 "cruzando todo el mini-Internet" 127.0.0
 
 
 # test roundrobin default router
-python3 c3/ac5/router.py 127.0.0.1 8880 c3/ac5/tabla_de_rutas/v3/rutas_R0_v3.txt
-python3 c3/ac5/router.py 127.0.0.1 8881 c3/ac5/tabla_de_rutas/v3/rutas_R1_v3.txt
-python3 c3/ac5/router.py 127.0.0.1 8882 c3/ac5/tabla_de_rutas/v3/rutas_R2_v3.txt 
-python3 c3/ac5/router.py 127.0.0.1 8883 c3/ac5/tabla_de_rutas/v3/rutas_R3_v3.txt 
-python3 c3/ac5/router.py 127.0.0.1 8884 c3/ac5/tabla_de_rutas/v3/rutas_R4_v3.txt 
-python3 c3/ac5/router.py 127.0.0.1 8885 c3/ac5/tabla_de_rutas/v3/rutas_R5_v3.txt 
-python3 c3/ac5/router.py 127.0.0.1 8886 c3/ac5/tabla_de_rutas/v3/rutas_R6_v3.txt
-python3 c3/ac5/router.py 127.0.0.1 7000 c3/ac5/tabla_de_rutas/v3/rutas_RD_v3.txt
+python3 c3/ac5/router.py 127.0.0.1 8880 c3/ac5/tabla_de_rutas/v3/rutas_R0_v5.txt
+python3 c3/ac5/router.py 127.0.0.1 8881 c3/ac5/tabla_de_rutas/v3/rutas_R1_v5.txt
+python3 c3/ac5/router.py 127.0.0.1 8882 c3/ac5/tabla_de_rutas/v3/rutas_R2_v5.txt 
+python3 c3/ac5/router.py 127.0.0.1 8883 c3/ac5/tabla_de_rutas/v3/rutas_R3_v5.txt 
+python3 c3/ac5/router.py 127.0.0.1 8884 c3/ac5/tabla_de_rutas/v3/rutas_R4_v5.txt 
+python3 c3/ac5/router.py 127.0.0.1 8885 c3/ac5/tabla_de_rutas/v3/rutas_R5_v5.txt 
+python3 c3/ac5/router.py 127.0.0.1 8886 c3/ac5/tabla_de_rutas/v3/rutas_R6_v5.txt
+python3 c3/ac5/router.py 127.0.0.1 7000 c3/ac5/tabla_de_rutas/v3/rutas_RD_v5.txt
+
 
 python3 c3/ac5/sender.py 127.0.0.1 8881 "cruzando todo el mini-Internet" 127.0.0.1 8885
 
-54201
-5321
-54201
-5321
-536201
-5421
-53201
 
 python3 c3/ac5/sender.py 127.0.0.1 8885 "cruzando todo el mini-Internet" 127.0.0.1 8881
-1235
-1245
-10235
-1245
-12635
-10235
-1245
-1235
+
 
