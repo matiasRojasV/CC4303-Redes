@@ -45,18 +45,53 @@ Este diseño distribuye el tráfico de manera estrictamente equitativa y cíclic
 
 # Pruebas Mini-Internet sin TTL (Informe 1pto):
 
-## ¿Cuántos saltos dan los paquetes?
+### Análisis de Saltos en la Red
 
-Los paquetes realizan **3 o 5 saltos**, dependiendo de la ruta utilizada.
+Los paquetes realizaron entre **4 y 8 saltos**, dependiendo de la ruta seguida. La 
+cantidad de saltos no fue constante, evidenciando que el enrutamiento varía entre pruebas.
 
-## ¿Siempre dan la misma cantidad de saltos?
+La ruta más corta observada requirió **4 saltos** (1 → 2 → 4 → 5). Sin embargo, la 
+mayoría de los paquetes recorrió más saltos debido a que pasaron varias veces por 
+los mismos routers antes de llegar al destino.
 
-No. Algunos paquetes recorren **3 saltos** y otros **5 saltos**, por lo que la cantidad de saltos varía según la ruta seleccionada.
+### Conclusión
 
-## ¿Cómo se compara con la cantidad mínima de saltos?
+Los resultados sugieren la presencia de **bucles de enrutamiento** o una convergencia 
+incompleta de las tablas de rutas, lo que provoca que algunos paquetes sigan caminos 
+más largos que la ruta óptima y aumenten la cantidad de saltos necesarios para alcanzar 
+el destino.
 
-La ruta mínima entre R1 y R5 es de **3 saltos**. Algunos paquetes siguen esta ruta óptima, mientras que otros toman rutas alternativas de **5 saltos**, superando el mínimo.
 
-## Observación
 
-Como existen múltiples rutas hacia el destino, algunos paquetes siguen el camino más corto y otros toman rutas más largas, lo que sugiere un balanceo de carga o decisiones de enrutamiento alternativas.
+### Observaciones de las Pruebas
+
+Se repitieron las pruebas utilizando una topología de **7 routers**, correspondiente a la 
+estructura solicitada en el Test 2 del Paso 8. Al comparar los resultados con la red anterior, 
+se observó que la cantidad de saltos aumentó debido al mayor número de nodos y rutas posibles 
+dentro de la red.
+
+Los paquetes realizaron entre **4 y 12 saltos**, dependiendo de la ruta seguida. La cantidad de 
+saltos no fue constante, ya que algunos paquetes recorrieron caminos más largos y pasaron varias 
+veces por los mismos routers antes de llegar al destino.
+
+La ruta mínima observada requirió **4 saltos**, mientras que otras alcanzaron hasta **12 saltos**, 
+evidenciando la presencia de rutas alternativas y posibles bucles de enrutamiento.
+
+### Conclusión
+
+Los resultados muestran que, al aumentar el tamaño de la red a 7 routers, también aumenta la variabilidad 
+en las rutas y la cantidad de saltos que realizan los paquetes. Esto sugiere la existencia de múltiples 
+caminos hacia el destino y posibles períodos de convergencia de las tablas de rutas, provocando que 
+algunos paquetes sigan trayectorias más largas que la ruta óptima.
+
+Además, se incluyen en el informe los contenidos de los distintos archivos de rutas utilizados para 
+la configuración de la red.
+
+
+# ¿En que posición (línea) de la tabla debería ir la ruta default? Añada en su informe cómo queda su nueva tabla de rutas y la respuesta a esta pregunta.
+La ruta default (0.0.0.0/0) debe ir al final de la tabla de rutas, después de todas las rutas específicas.
+
+Razón: Las tablas de rutas se procesan de arriba hacia abajo. Al tener la ruta default al final, se garantiza que:
+
+Primero se intenten las rutas específicas (más precisas)
+Solo si no coincide ninguna ruta específica, se usa la ruta default como "catch-all"

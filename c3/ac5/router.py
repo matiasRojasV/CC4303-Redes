@@ -164,19 +164,26 @@ def init_router(ip: str, puerto: int, archivo_rutas: str):
 
             # El paquete es para este router
             if parsed_IP_packet['ip'] == ip and parsed_IP_packet['puerto'] == puerto:
-                print(f"Paquete recibido exitosamente en destino final.")
+                print(f"\nPaquete recibido exitosamente en destino final.")
                 print(f"Contenido del mensaje: {parsed_IP_packet['mensaje']}\n")
 
             else:
                 next_hop = check_routes(archivo_rutas, destination_address, router_state)
-                
+
+                #obtener el nro del router (DEBUG)
+                numero_str = str(puerto)
+                if numero_str.startswith('7'):
+                    router_num = int(numero_str[0])
+                else:
+                    router_num = puerto % 10
+
                 if next_hop:
                     # Hacer forward del paquete original en bytes hacia el siguiente salto
                     sock.sendto(datos, next_hop)
-                    print(f"redirigiendo paquete desde {puerto} hacia {next_hop}\n")
+                    print(f"\n[{router_num}] redirigiendo paquete hacia {next_hop[1]}")
                 else:
                     # Descartar el paquete si check_routes retorna None
-                    print(f"No hay rutas hacia {destination_address} para paquete {parsed_IP_packet}\n")
+                    print(f"No hay rutas hacia {destination_address} para el paquete\n")
 
     except KeyboardInterrupt:
         print("\nApagando el router...")

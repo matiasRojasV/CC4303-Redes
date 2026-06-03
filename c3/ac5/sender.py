@@ -32,19 +32,12 @@ def enviar_paquete():
         # Enviar el paquete hacia la dirección de envío
         sock.sendto(paquete_bytes, (ip_envio, puerto_envio))
         print(f"Paquete enviado con éxito.")
-        print(f" -> Destino lógico final encapsulado: {ip_final}:{puerto_final}")
-        print(f" -> Destino físico de envío (Next Hop): {ip_envio}:{puerto_envio}")
-        print(f" -> Tamaño total: {len(paquete_bytes)} bytes")
     
     except Exception as e:
         print(f"Error al enviar el paquete: {e}")
     
     finally:
         sock.close()
-
-
-
-
 
 
 if __name__ == "__main__":
