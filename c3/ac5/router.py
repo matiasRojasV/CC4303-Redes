@@ -71,14 +71,19 @@ def parse_packet(IP_packet: bytes) -> dict:
     puerto_bytes = IP_packet[4:6]
     puerto = int.from_bytes(puerto_bytes, byteorder='big')
     
+    # Extraer el bytes del ttl y convertirlos a un entero
+    ttl_bytes = IP_packet[6:7]
+    ttl = int.from_bytes(ttl_bytes, byteorder='big')
+
     # Extraer el resto de los bytes correspondientes al mensaje y decodificarlos
-    mensaje_bytes = IP_packet[6:]
+    mensaje_bytes = IP_packet[7:]
     mensaje = mensaje_bytes.decode('utf-8')
-    
+
     # 4. Retornar la estructura de datos conveniente
     return {
         'ip': ip,
         'puerto': puerto,
+        'ttl': ttl,
         'mensaje': mensaje
     }
 
@@ -89,6 +94,7 @@ def create_packet(parsed_IP_packet: dict) -> bytes:
     # Obtener los datos de parsed_IP_packet
     ip = parsed_IP_packet['ip']
     puerto = parsed_IP_packet['puerto']
+    ttl = parsed_IP_packet['ttl']
     mensaje = parsed_IP_packet['mensaje']
     
     # Codificar la IP a 4 bytes consecutivos
@@ -98,11 +104,14 @@ def create_packet(parsed_IP_packet: dict) -> bytes:
     # Codificar el puerto a 2 bytes (big-endian)
     puerto_bytes = puerto.to_bytes(2, byteorder='big')
     
+    # Codificar el ttl a 1 byte
+    ttl_bytes = ttl.to_bytes(1, byteorder='big')
+
     # Codificar el mensaje a bytes
     mensaje_bytes = mensaje.encode('utf-8')
     
     # Concatenar todo para formar el paquete final
-    return ip_bytes + puerto_bytes + mensaje_bytes
+    return ip_bytes + puerto_bytes + ttl_bytes + mensaje_bytes
 
 
 def check_routes(routes_file_name: str, destination_address: tuple[str, int], router_state: RouterState = None)-> tuple[str, int]:
