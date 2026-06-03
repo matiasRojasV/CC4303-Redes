@@ -26,7 +26,6 @@ python3 sender.py 127.0.0.1 8884 "Hola, ¿hay alguien ahí?" 127.0.0.1 8881
 
 
 # test roundrobin
-cd c3/ac5
 python3 router.py 127.0.0.1 8881 c3/ac5/tabla_de_rutas/v3/rutas_R1_v3.txt
 python3 router.py 127.0.0.1 8882 c3/ac5/tabla_de_rutas/v3/rutas_R2_v3.txt 
 python3 router.py 127.0.0.1 8883 c3/ac5/tabla_de_rutas/v3/rutas_R3_v3.txt 
@@ -35,9 +34,10 @@ python3 router.py 127.0.0.1 8885 c3/ac5/tabla_de_rutas/v3/rutas_R5_v3.txt
 
 
 python3 sender.py 127.0.0.1 8881 "cruzando todo el mini-Internet" 127.0.0.1 8885
-r5 -> r4 -> r2 -> r1
-r5 -> r3 -> r2 -> r1
-r5 -> r4 -> r2 -> r1
+
+
+
+
 
 
 # test roundrobin v2
@@ -51,23 +51,11 @@ python3 c3/ac5/router.py 127.0.0.1 8886 c3/ac5/tabla_de_rutas/v3/rutas_R6_v4.txt
 
 
 python3 c3/ac5/sender.py 127.0.0.1 8881 "cruzando todo el mini-Internet" 127.0.0.1 8885
-54201
-5321
-54201
-5321
-536201
-5421
-53201
+
 
 python3 c3/ac5/sender.py 127.0.0.1 8885 "cruzando todo el mini-Internet" 127.0.0.1 8881
-1235
-1245
-10235
-1245
-12635
-10235
-1245
-1235
+
+
 
 
 
@@ -88,3 +76,15 @@ python3 c3/ac5/sender.py 127.0.0.1 8881 "cruzando todo el mini-Internet" 127.0.0
 python3 c3/ac5/sender.py 127.0.0.1 8885 "cruzando todo el mini-Internet" 127.0.0.1 8881
 
 
+
+# test v2 modificado
+Usando las rutas del ejemplo 2 de la sección anterior, pruebe qué ocurre si alguien configura mal una de las tablas de rutas y coméntelo brevemente en su informe. Para ello, cambie la configuración de la tabla de rutas del archivo rutas_R2_v2.txt  por: 
+
+bucle entre r1 y r2
+[R2] redirigiendo paquete desde ('127.0.0.1', 8882) hacia ('127.0.0.1', 8881)
+[R1] redirigiendo paquete desde ('127.0.0.1', 8881) hacia ('127.0.0.1', 8882)
+[R2] redirigiendo paquete desde ('127.0.0.1', 8882) hacia ('127.0.0.1', 8881)
+[R1] redirigiendo paquete desde ('127.0.0.1', 8881) hacia ('127.0.0.1', 8882)
+[R2] redirigiendo paquete desde ('127.0.0.1', 8882) hacia ('127.0.0.1', 8881)
+[R1]redirigiendo paquete desde ('127.0.0.1', 8881) hacia ('127.0.0.1', 8882)
+[R2] redirigiendo paquete desde ('127.0.0.1', 8882) hacia ('127.0.0.1', 8881)

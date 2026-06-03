@@ -173,7 +173,7 @@ def init_router(ip: str, puerto: int, archivo_rutas: str):
                 if next_hop:
                     # Hacer forward del paquete original en bytes hacia el siguiente salto
                     sock.sendto(datos, next_hop)
-                    print(f"redirigiendo paquete con destino final {destination_address} desde {router_actual} hacia {next_hop}\n")
+                    print(f"redirigiendo paquete desde {puerto} hacia {next_hop}\n")
                 else:
                     # Descartar el paquete si check_routes retorna None
                     print(f"No hay rutas hacia {destination_address} para paquete {parsed_IP_packet}\n")

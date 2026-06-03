@@ -43,3 +43,20 @@ Este diseño distribuye el tráfico de manera estrictamente equitativa y cíclic
 
 
 
+# Pruebas Mini-Internet sin TTL (Informe 1pto):
+
+## ¿Cuántos saltos dan los paquetes?
+
+Los paquetes realizan **3 o 5 saltos**, dependiendo de la ruta utilizada.
+
+## ¿Siempre dan la misma cantidad de saltos?
+
+No. Algunos paquetes recorren **3 saltos** y otros **5 saltos**, por lo que la cantidad de saltos varía según la ruta seleccionada.
+
+## ¿Cómo se compara con la cantidad mínima de saltos?
+
+La ruta mínima entre R1 y R5 es de **3 saltos**. Algunos paquetes siguen esta ruta óptima, mientras que otros toman rutas alternativas de **5 saltos**, superando el mínimo.
+
+## Observación
+
+Como existen múltiples rutas hacia el destino, algunos paquetes siguen el camino más corto y otros toman rutas más largas, lo que sugiere un balanceo de carga o decisiones de enrutamiento alternativas.
